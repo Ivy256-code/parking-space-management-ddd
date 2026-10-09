@@ -1,0 +1,17 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\RITAH\Desktop\Advanced Programming\parking-space-management-ddd\venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\RITAH\Desktop\Advanced Programming\parking-space-management-ddd
+configfile: pytest.ini
+testpaths: tests
+collecting ... collected 7 items
+
+tests/domain/test_parking_space.py::test_new_parking_space_is_available PASSED [ 14%]
+tests/domain/test_parking_space.py::test_occupy_changes_available_space_to_occupied PASSED [ 28%]
+tests/domain/test_parking_space.py::test_occupying_an_occupied_space_is_rejected PASSED [ 42%]
+tests/domain/test_parking_space.py::test_rejected_occupy_leaves_state_unchanged PASSED [ 57%]
+tests/domain/test_parking_space.py::test_spaces_with_same_id_are_equal PASSED [ 71%]
+tests/domain/test_parking_space.py::test_spaces_with_different_ids_are_not_equal_even_with_same_number PASSED [ 85%]
+tests/domain/test_parking_space.py::test_empty_space_id_is_rejected PASSED [100%]
+
+============================== 7 passed in 0.08s ==============================
