@@ -1,28 +1,34 @@
 """Application service for the 'Assign Parking Space' use case."""
 
+import uuid
 from typing import Callable
 
 from src.application.dto.assign_parking_space_dto import (
     AssignParkingSpaceRequest,
     AssignParkingSpaceResult,
 )
+from src.domain.aggregates.parking_session import ParkingSession
+from src.domain.errors import DomainError
+from src.domain.events.event_dispatcher import EventDispatcher
 from src.domain.repositories.parking_space_repository import ParkingSpaceRepository
 
-# A function that takes (vehicle_id, space_id) and returns the new session's ID.
-# Mark's ParkingSession work will be plugged in here later.
-SessionCreator = Callable[[str, str], str]
+
+def _new_session_id() -> str:
+    return str(uuid.uuid4())
 
 
 class AssignParkingSpaceService:
-    """Coordinates the use case. It contains no business rules of its own."""
+    """Coordinates the use case. Business rules stay in the domain."""
 
     def __init__(
         self,
         repository: ParkingSpaceRepository,
-        create_session: SessionCreator,
+        dispatcher: EventDispatcher,
+        generate_session_id: Callable[[], str] = _new_session_id,
     ) -> None:
         self._repository = repository
-        self._create_session = create_session
+        self._dispatcher = dispatcher
+        self._generate_session_id = generate_session_id
 
     def assign(self, request: AssignParkingSpaceRequest) -> AssignParkingSpaceResult:
         parking_space = self._repository.find_by_id(request.space_id)
@@ -32,5 +38,16 @@ class AssignParkingSpaceService:
                 f"Parking space '{request.space_id}' not found."
             )
 
-        session_id = self._create_session(request.vehicle_id, request.space_id)
-        return AssignParkingSpaceResult.succeeded(session_id)
+        session = ParkingSession(
+            self._generate_session_id(), request.vehicle_id, request.space_id
+        )
+
+        try:
+            # Mark's handler occupies the space when the event is dispatched.
+            for event in session.pull_domain_events():
+                self._dispatcher.dispatch(event)
+        except DomainError as error:  # BR3: space already occupied
+            return AssignParkingSpaceResult.rejected(str(error))
+
+        self._repository.save(parking_space)
+        return AssignParkingSpaceResult.succeeded(session.session_id)

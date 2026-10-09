@@ -17,6 +17,9 @@ class InMemoryParkingSpaceRepository(ParkingSpaceRepository):
 
     def find_by_id(self, space_id: str) -> Optional["ParkingSpace"]:
         return self._spaces.get(space_id)
+    def find(self, parking_space_id: str) -> Optional["ParkingSpace"]:
+        """Name used by Mark's event handler. Same as find_by_id."""
+        return self.find_by_id(parking_space_id)
 
     def save(self, parking_space: "ParkingSpace") -> None:
         self._spaces[parking_space.space_id] = parking_space
